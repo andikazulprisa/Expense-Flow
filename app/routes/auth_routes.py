@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify, current_app
 from app.models.user import User
 from app.extensions import db, bcrypt
-import jwt
+import jwt as pyjwt
 import datetime
+from flask_jwt_extended import create_access_token
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -39,9 +40,7 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password, password):
         return jsonify({'message': 'Invalid email or password'}), 401
     
-    token = jwt.encode({
-        'user_id': user.id,
-        'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
-    }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
-
+    token = create_access_token(identity=str(user.id))
     return jsonify({'token': token}), 200
+
+
